@@ -1,0 +1,34 @@
+# ──────────────────────────────────────────────────────────
+# SERVER-SIDE dependencies (install on GPU server)
+# ──────────────────────────────────────────────────────────
+
+# Web framework
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9     # for file upload endpoint
+
+# Pydantic v2
+pydantic>=2.7.0
+pydantic-settings>=2.3.0
+
+# Embedding — BGE-M3
+FlagEmbedding>=1.2.9
+torch>=2.2.0                # GPU: install matching CUDA version separately
+
+# Vector store
+faiss-gpu>=1.7.4            # use faiss-cpu if no GPU: pip install faiss-cpu
+numpy>=1.26.0
+
+# Sparse retrieval
+rank_bm25>=0.2.2
+
+# Reranker
+transformers>=4.40.0
+sentencepiece>=0.2.0        # needed by some tokenizers
+accelerate>=0.30.0          # for model loading
+
+# PDF parsing
+PyMuPDF>=1.24.0
+
+# HTTP client (for Ollama calls)
+httpx>=0.27.0

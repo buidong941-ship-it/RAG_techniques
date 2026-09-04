@@ -1,0 +1,10 @@
+[
+  {
+    "_comment": "SAMPLE ENTRY — replace with real QA pairs from your documents",
+    "question": "...",
+    "ground_truth": "...",
+    "source": "filename.pdf",
+    "page": 1,
+    "relevant_chunks": ["filename.pdf::chunk_0", "filename.pdf::chunk_1"]
+  }
+]
