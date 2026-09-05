@@ -12,8 +12,12 @@ pydantic>=2.7.0
 pydantic-settings>=2.3.0
 
 # Embedding — BGE-M3
-FlagEmbedding>=1.2.9
+# FlagEmbedding 1.3+ passes dtype= to XLMRobertaModel.__init__() — not supported in transformers 4.44
+# 1.2.9 uses model.half() instead → safe with transformers 4.44.x
+FlagEmbedding==1.2.9
 torch>=2.2.0                # GPU: install matching CUDA version separately
+# transformers sweet spot: >=4.44 supports dtype kwarg; <4.52 avoids lazy-import breakage
+transformers>=4.44.0,<4.52.0
 
 # Vector store
 faiss-gpu>=1.7.4            # use faiss-cpu if no GPU: pip install faiss-cpu

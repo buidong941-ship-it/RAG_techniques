@@ -105,7 +105,8 @@ class Evaluator:
         for i, sample in enumerate(self.dataset):
             question        = sample["question"]
             ground_truth    = sample.get("ground_truth", "")
-            relevant_chunks = sample.get("relevant_chunks", [])
+            relevant_chunks = sample.get("relevant_chunks", None)  # None = not provided
+            has_retrieval_gt = relevant_chunks is not None and len(relevant_chunks) > 0
 
             logger.info("[%d/%d] Evaluating: %s", i + 1, len(self.dataset), question[:60])
 
@@ -136,14 +137,16 @@ class Evaluator:
             answer        = response.get("answer", "")
             context       = "\n\n".join(c["text"] for c in response.get("chunks", []))
 
-            # ── Retrieval metrics ──────────────────────────────────────────
+            # ── Retrieval metrics ──────────────────────────────────────────────
             top_k_used = self.top_k or len(retrieved_ids)
-            ret_metrics = compute_retrieval_metrics(
-                retrieved_ids=retrieved_ids,
-                relevant_ids=relevant_chunks,
-                k=top_k_used,
-            )
-            retrieval_metrics_list.append(ret_metrics)
+            ret_metrics: dict[str, float] = {}
+            if has_retrieval_gt:
+                ret_metrics = compute_retrieval_metrics(
+                    retrieved_ids=retrieved_ids,
+                    relevant_ids=relevant_chunks,
+                    k=top_k_used,
+                )
+                retrieval_metrics_list.append(ret_metrics)
 
             # ── Generation metrics (LLM-judge) ─────────────────────────────
             gen_metrics: dict[str, float] = {}
@@ -157,12 +160,17 @@ class Evaluator:
                 )
                 generation_metrics_list.append(gen_metrics)
 
-                # Failure mode
-                recall_k = ret_metrics.get(f"recall@{top_k_used}", 0.0)
-                gen_metrics["failure_mode"] = diagnose_failure(
-                    retrieval_recall=recall_k,
-                    generation_correctness=gen_metrics.get("answer_correctness", 0.0),
-                )
+                # Failure mode — only meaningful if we have retrieval ground truth
+                if has_retrieval_gt:
+                    recall_k = ret_metrics.get(f"recall@{top_k_used}", 0.0)
+                    gen_metrics["failure_mode"] = diagnose_failure(
+                        retrieval_recall=recall_k,
+                        generation_correctness=gen_metrics.get("answer_correctness", 0.0),
+                    )
+                else:
+                    # Without retrieval GT, classify based on generation quality only
+                    correctness = gen_metrics.get("answer_correctness", 0.0)
+                    gen_metrics["failure_mode"] = "ok" if correctness >= 0.5 else "generation_failure"
 
             # ── System metrics ─────────────────────────────────────────────
             sys_record = build_system_record(response, mem_before, mem_after)
@@ -170,12 +178,12 @@ class Evaluator:
 
             # ── Per-sample result ──────────────────────────────────────────
             per_sample_results.append({
-                "sample_idx":    i,
-                "question":      question,
-                "ground_truth":  ground_truth,
-                "answer":        answer,
-                "retrieved_ids": retrieved_ids,
-                "relevant_ids":  relevant_chunks,
+                "sample_idx":      i,
+                "question":        question,
+                "ground_truth":    ground_truth,
+                "answer":          answer,
+                "retrieved_ids":   retrieved_ids,
+                "has_retrieval_gt": has_retrieval_gt,
                 **ret_metrics,
                 **gen_metrics,
                 **sys_record,

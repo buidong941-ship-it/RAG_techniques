@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-import fitz                          # PyMuPDF
+import pymupdf as fitz               # PyMuPDF (fitz API deprecated)
 import faiss
 import numpy as np
 from FlagEmbedding import BGEM3FlagModel

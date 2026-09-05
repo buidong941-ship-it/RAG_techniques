@@ -19,11 +19,13 @@ import base64
 import logging
 import tempfile
 import time
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from server.config import settings
 from server.indexer import (
@@ -56,12 +58,25 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# ── Lifespan (startup / shutdown) ────────────────────────────────────────────
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # ── Startup ──────────────────────────────────────────────────────────────
+    settings.ensure_dirs()
+    load_index()
+    logger.info("RAG server started on %s:%d", settings.host, settings.port)
+    yield
+    # ── Shutdown (add cleanup here if needed) ─────────────────────────────────
+
+
 # ── App setup ─────────────────────────────────────────────────────────────────
 
 app = FastAPI(
     title="RAG Backend",
     description="Local RAG server with FAISS + BGE-M3 + Ollama",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -70,13 +85,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-async def startup_event():
-    settings.ensure_dirs()
-    load_index()
-    logger.info("RAG server started on %s:%d", settings.host, settings.port)
 
 
 # ── Health ────────────────────────────────────────────────────────────────────

@@ -4,7 +4,6 @@
     "question": "...",
     "ground_truth": "...",
     "source": "filename.pdf",
-    "page": 1,
-    "relevant_chunks": ["filename.pdf::chunk_0", "filename.pdf::chunk_1"]
+    "page": 1
   }
 ]
