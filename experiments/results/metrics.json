@@ -1,0 +1,302 @@
+[
+    {
+        "question": "Tên đề tài nghiên cứu khoa học là gì?",
+        "ground_truth": "Xây dựng mô hình dự báo nhu cầu tái đào tạo dưới tác động của trí tuệ nhân tạo trên cơ sở phân tích nhu cầu kỹ năng.",
+        "source": "CNKH_AI.pdf",
+        "page": "1"
+    },
+    {
+        "question": "Sinh viên thực hiện đề tài nghiên cứu này là ai?",
+        "ground_truth": "Lê Ngọc Thủy Tiên.",
+        "source": "CNKH_AI.pdf",
+        "page": "1"
+    },
+    {
+        "question": "Giảng viên hướng dẫn đề tài nghiên cứu này là ai?",
+        "ground_truth": "TS. Trần Trung Minh.",
+        "source": "CNKH_AI.pdf",
+        "page": "1"
+    },
+    {
+        "question": "Theo Tổ chức Lao động Quốc tế (ILO), có khoảng bao nhiêu phần trăm lao động trên thế giới đang làm việc trong những nghề có mức độ phơi nhiễm nhất định với GenAI?",
+        "ground_truth": "Khoảng một phần tư lao động trên thế giới.",
+        "source": "CNKH_AI.pdf",
+        "page": "8"
+    },
+    {
+        "question": "Theo nghiên cứu của OECD, sự thiếu hụt các kỹ năng phù hợp có thể dẫn đến điều gì?",
+        "ground_truth": "Có thể trở thành rào cản đối với khả năng khai thác hiệu quả công nghệ AI.",
+        "source": "CNKH_AI.pdf",
+        "page": "8"
+    },
+    {
+        "question": "Nghiên cứu sử dụng phương pháp SHAP nhằm mục đích gì?",
+        "ground_truth": "Nhằm diễn giải mức độ đóng góp của các đặc trưng đầu vào đối với kết quả dự báo.",
+        "source": "CNKH_AI.pdf",
+        "page": "9"
+    },
+    {
+        "question": "Ba thuật toán học máy nào được sử dụng để so sánh khả năng dự báo trong nghiên cứu?",
+        "ground_truth": "Random Forest, XGBoost và LightGBM.",
+        "source": "CNKH_AI.pdf",
+        "page": "9"
+    },
+    {
+        "question": "Từ viết tắt SBTC trong tài liệu có nghĩa là gì?",
+        "ground_truth": "Skill-Biased Technological Change (Thay đổi công nghệ thiên về kỹ năng).",
+        "source": "CNKH_AI.pdf",
+        "page": "5"
+    },
+    {
+        "question": "Từ viết tắt RBTC trong tài liệu có nghĩa là gì?",
+        "ground_truth": "Routine-Biased Technological Change (Thay đổi công nghệ thiên về công việc thường lệ).",
+        "source": "CNKH_AI.pdf",
+        "page": "5"
+    },
+    {
+        "question": "Mục tiêu tổng quát của nghiên cứu là gì?",
+        "ground_truth": "Xây dựng và đánh giá mô hình học máy dự báo nhu cầu tái đào tạo (reskilling/upskilling) trong bối cảnh gia tăng ứng dụng trí tuệ nhân tạo (AI), dựa trên đặc trưng về AI, rủi ro tự động hóa, xu hướng chuyển dịch kỹ năng và đặc điểm nghề nghiệp.",
+        "source": "CNKH_AI.pdf",
+        "page": "10"
+    },
+    {
+        "question": "Đơn vị phân tích cốt lõi (đối tượng quan sát) của nghiên cứu là gì?",
+        "ground_truth": "Các quan sát ở cấp độ nghề nghiệp (occupation), theo ngành kinh tế, quốc gia và thời gian.",
+        "source": "CNKH_AI.pdf",
+        "page": "11"
+    },
+    {
+        "question": "Dữ liệu nghiên cứu được thu thập trong giai đoạn thời gian nào?",
+        "ground_truth": "Từ năm 2020 đến năm 2026.",
+        "source": "CNKH_AI.pdf",
+        "page": "11"
+    },
+    {
+        "question": "Bộ dữ liệu chính được sử dụng trong nghiên cứu có tên là gì?",
+        "ground_truth": "AI Job Replacement and Workforce Transformation Dataset (2020-2026).",
+        "source": "CNKH_AI.pdf",
+        "page": "11"
+    },
+    {
+        "question": "Nghiên cứu của Autor, Levy và Murnane (2003) cho rằng quá trình tin học hóa chủ yếu thay thế loại nhiệm vụ nào?",
+        "ground_truth": "Các nhiệm vụ mang tính lặp lại, có quy trình rõ ràng và dễ mã hóa thành thuật toán.",
+        "source": "CNKH_AI.pdf",
+        "page": "12"
+    },
+    {
+        "question": "Theo Acemoglu và Restrepo (2018), tự động hóa tạo ra hai lực tác động nào đối với thị trường lao động?",
+        "ground_truth": "Thay thế lao động trong các nhiệm vụ có thể tự động hóa, đồng thời tạo ra các nhiệm vụ mới, ngành nghề mới và cơ hội việc làm mới.",
+        "source": "CNKH_AI.pdf",
+        "page": "12"
+    },
+    {
+        "question": "Nghiên cứu của Eloundou và cộng sự (2023) ước tính bao nhiêu phần trăm lao động tại Hoa Kỳ có ít nhất 10% nhiệm vụ chịu ảnh hưởng từ các mô hình ngôn ngữ lớn?",
+        "ground_truth": "Khoảng 80% lao động.",
+        "source": "CNKH_AI.pdf",
+        "page": "13"
+    },
+    {
+        "question": "Khái niệm 'Khoảng cách kỹ năng' (skill gap) được định nghĩa như thế nào trong tài liệu?",
+        "ground_truth": "Là khoảng cách giữa kỹ năng hiện có của lực lượng lao động và kỹ năng mà doanh nghiệp hoặc thị trường lao động yêu cầu.",
+        "source": "CNKH_AI.pdf",
+        "page": "14"
+    },
+    {
+        "question": "'Execution gap' được nhắc đến trong báo cáo của PMI (2026) phản ánh vấn đề gì?",
+        "ground_truth": "Khoảng cách đáng kể giữa kế hoạch đào tạo chiến lược và khả năng triển khai thực tế trong tổ chức.",
+        "source": "CNKH_AI.pdf",
+        "page": "14"
+    },
+    {
+        "question": "Theo Bresnahan & Trajtenberg (1995), AI được xem là loại công nghệ gì?",
+        "ground_truth": "Công nghệ mục đích chung (General Purpose Technology – GPT).",
+        "source": "CNKH_AI.pdf",
+        "page": "26"
+    },
+    {
+        "question": "GenAI có sự khác biệt cốt lõi nào so với hệ thống AI truyền thống?",
+        "ground_truth": "GenAI có khả năng tạo ra nội dung mới dưới nhiều hình thức (văn bản, hình ảnh, mã lập trình), thay vì chỉ tập trung phân tích hoặc dự đoán.",
+        "source": "CNKH_AI.pdf",
+        "page": "26"
+    },
+    {
+        "question": "Ba cơ chế chính mà AI tác động đến công việc bao gồm những gì?",
+        "ground_truth": "Cơ chế thay thế (substitution), cơ chế bổ trợ (augmentation), và cơ chế tạo lập (creation).",
+        "source": "CNKH_AI.pdf",
+        "page": "26"
+    },
+    {
+        "question": "Khái niệm 'nghề nghiệp' (occupation) được hiểu như thế nào theo hệ thống phân loại ISCO-08?",
+        "ground_truth": "Là một nhóm các vị trí việc làm có đặc điểm, chức năng và yêu cầu chuyên môn tương đồng.",
+        "source": "CNKH_AI.pdf",
+        "page": "27"
+    },
+    {
+        "question": "Khái niệm 'nhiệm vụ công việc' (task) được định nghĩa ra sao?",
+        "ground_truth": "Là các hoạt động hoặc đơn vị công việc có thể được quan sát và mô tả tương đối độc lập trong một vị trí việc làm (job).",
+        "source": "CNKH_AI.pdf",
+        "page": "27"
+    },
+    {
+        "question": "Kỹ năng lao động thường được nhóm thành ba nhóm phổ biến nào?",
+        "ground_truth": "Kỹ năng chuyên môn (technical skills), kỹ năng mềm (soft skills) và kỹ năng số (digital skills).",
+        "source": "CNKH_AI.pdf",
+        "page": "28"
+    },
+    {
+        "question": "Heckman, Stixrud, & Urzua (2006) chia kỹ năng thành hai loại chính là gì?",
+        "ground_truth": "Kỹ năng nhận thức (cognitive skills) và kỹ năng phi nhận thức (non-cognitive skills).",
+        "source": "CNKH_AI.pdf",
+        "page": "28"
+    },
+    {
+        "question": "Tái đào tạo (reskilling) là quá trình gì?",
+        "ground_truth": "Là quá trình học tập và phát triển các kỹ năng mới nhằm giúp người lao động chuyển đổi sang một vai trò công việc, vị trí việc làm hoặc nghề nghiệp khác.",
+        "source": "CNKH_AI.pdf",
+        "page": "29"
+    },
+    {
+        "question": "Nâng cao kỹ năng (upskilling) được hiểu như thế nào?",
+        "ground_truth": "Là quá trình cải thiện, mở rộng hoặc cập nhật các kỹ năng hiện có nhằm nâng cao hiệu quả thực hiện công việc trong cùng một vai trò nghề nghiệp.",
+        "source": "CNKH_AI.pdf",
+        "page": "30"
+    },
+    {
+        "question": "Sự khác biệt cốt lõi giữa reskilling và upskilling là gì?",
+        "ground_truth": "Reskilling là dịch chuyển theo chiều rộng sang nhiệm vụ/vai trò mới, trong khi upskilling là phát triển theo chiều sâu để gia tăng năng lực trong phạm vi nghề nghiệp hiện tại.",
+        "source": "CNKH_AI.pdf",
+        "page": "30"
+    },
+    {
+        "question": "Khoảng trống nghiên cứu thứ nhất về phương pháp luận và năng lực dự báo trong tài liệu đề cập đến vấn đề gì?",
+        "ground_truth": "Các nghiên cứu hiện tại chủ yếu mang tính mô tả/đo lường, còn hạn chế trong khả năng dự báo động sự dịch chuyển nhu cầu kỹ năng bằng các phương pháp học máy.",
+        "source": "CNKH_AI.pdf",
+        "page": "31"
+    },
+    {
+        "question": "Khoảng trống nghiên cứu thứ ba về cấp độ phân tích và bối cảnh đặc thù nhấn mạnh điều gì?",
+        "ground_truth": "Thiếu các bằng chứng thực nghiệm tại các nền kinh tế mới nổi như Việt Nam, do phần lớn dữ liệu hiện tại lấy từ Hoa Kỳ hoặc châu Âu.",
+        "source": "CNKH_AI.pdf",
+        "page": "31"
+    },
+    {
+        "question": "Mô hình nghiên cứu được xây dựng trên cơ sở của hai lý thuyết nền tảng nào?",
+        "ground_truth": "Lý thuyết Thay đổi công nghệ thiên về kỹ năng (SBTC) và Thay đổi công nghệ thiên về nhiệm vụ lặp lại (RBTC).",
+        "source": "CNKH_AI.pdf",
+        "page": "32"
+    },
+    {
+        "question": "Biến mục tiêu (target variable) trong mô hình nghiên cứu này là biến nào?",
+        "ground_truth": "Mức độ cấp thiết của nhu cầu tái đào tạo (reskilling_urgency_score).",
+        "source": "CNKH_AI.pdf",
+        "page": "33"
+    },
+    {
+        "question": "Bốn nhóm đặc trưng được tích hợp làm biến đầu vào của mô hình dự báo bao gồm những gì?",
+        "ground_truth": "Mức độ ứng dụng AI, rủi ro tự động hóa, xu hướng chuyển dịch kỹ năng, và đặc trưng nghề nghiệp.",
+        "source": "CNKH_AI.pdf",
+        "page": "33"
+    },
+    {
+        "question": "Giả thuyết H1 trong nghiên cứu phát biểu điều gì?",
+        "ground_truth": "Mức độ cấp thiết của nhu cầu tái đào tạo và các đặc trưng liên quan đến AI, rủi ro tự động hóa, khoảng cách kỹ năng có sự khác biệt giữa các nhóm nghề nghiệp và/hoặc ngành kinh tế.",
+        "source": "CNKH_AI.pdf",
+        "page": "34"
+    },
+    {
+        "question": "Giả thuyết H3 trong nghiên cứu đề cập đến vấn đề gì?",
+        "ground_truth": "Các đặc trưng đầu vào có mức độ và chiều hướng đóng góp khác nhau đối với kết quả dự báo mức độ cấp thiết của nhu cầu tái đào tạo.",
+        "source": "CNKH_AI.pdf",
+        "page": "34"
+    },
+    {
+        "question": "Biến 'automation_risk_percent' thuộc về nhóm đặc trưng nào trong mô hình?",
+        "ground_truth": "Nhóm đặc trưng phản ánh rủi ro tự động hóa.",
+        "source": "CNKH_AI.pdf",
+        "page": "35"
+    },
+    {
+        "question": "Biến 'ai_adoption_level' thuộc loại dữ liệu gì?",
+        "ground_truth": "Loại dữ liệu liên tục (Continuous).",
+        "source": "CNKH_AI.pdf",
+        "page": "35"
+    },
+    {
+        "question": "Các biến nào được phân loại là biến danh mục (categorical) trong bộ dữ liệu đầu vào?",
+        "ground_truth": "job_role, industry, country.",
+        "source": "CNKH_AI.pdf",
+        "page": "35"
+    },
+    {
+        "question": "Biến trình độ học vấn yêu cầu (education_requirement_level) thuộc loại dữ liệu nào?",
+        "ground_truth": "Loại dữ liệu thứ bậc (Ordinal).",
+        "source": "CNKH_AI.pdf",
+        "page": "36"
+    },
+    {
+        "question": "Bộ dữ liệu được sử dụng trong nghiên cứu có quy mô bao nhiêu quan sát và bao nhiêu biến?",
+        "ground_truth": "15.000 quan sát và 20 biến.",
+        "source": "CNKH_AI.pdf",
+        "page": "40"
+    },
+    {
+        "question": "Biến nào bị loại khỏi mô hình học máy để tránh khai thác thông tin nhận dạng không mang ý nghĩa dự báo?",
+        "ground_truth": "Biến định danh 'job_id'.",
+        "source": "CNKH_AI.pdf",
+        "page": "40"
+    },
+    {
+        "question": "Phương pháp nào được sử dụng để kiểm tra và xử lý giá trị ngoại lai cho các biến định lượng đầu vào?",
+        "ground_truth": "Phương pháp khoảng tứ phân vị (Interquartile Range – IQR) kết hợp kẹp ngưỡng (IQR capping).",
+        "source": "CNKH_AI.pdf",
+        "page": "41"
+    },
+    {
+        "question": "Biến nào ghi nhận 116 giá trị vượt ngưỡng IQR và phải kẹp trong khoảng [-21,75; 31,82]?",
+        "ground_truth": "Biến 'skill_demand_growth_percent'.",
+        "source": "CNKH_AI.pdf",
+        "page": "41"
+    },
+    {
+        "question": "Hai biến nào đã bị loại khỏi các mô hình chính nhằm hạn chế sự chồng lấp thông tin và bảo đảm khả năng diễn giải?",
+        "ground_truth": "skill_transition_pressure và ai_disruption_intensity.",
+        "source": "CNKH_AI.pdf",
+        "page": "41"
+    },
+    {
+        "question": "Các biến phân loại không có thứ tự tự nhiên như job_role, industry, country được mã hóa bằng phương pháp nào?",
+        "ground_truth": "Phương pháp one-hot encoding.",
+        "source": "CNKH_AI.pdf",
+        "page": "42"
+    },
+    {
+        "question": "Tại sao nghiên cứu không áp dụng chuẩn hóa Min-Max Scaling cho toàn bộ các biến định lượng trong pipeline chính?",
+        "ground_truth": "Vì Random Forest, XGBoost và LightGBM là các mô hình dựa trên cây quyết định, không yêu cầu đưa các biến về cùng một thang đo.",
+        "source": "CNKH_AI.pdf",
+        "page": "42"
+    },
+    {
+        "question": "Dữ liệu năm nào được giữ lại làm tập kiểm tra cuối cùng (test set) nhằm đánh giá khả năng dự báo ngoài mẫu?",
+        "ground_truth": "Dữ liệu năm 2026.",
+        "source": "CNKH_AI.pdf",
+        "page": "43"
+    },
+    {
+        "question": "Trong giai đoạn tối ưu hóa mô hình từ 2020-2024, phương pháp validation nào được áp dụng?",
+        "ground_truth": "Phương pháp validation theo cửa sổ mở rộng (expanding-window validation).",
+        "source": "CNKH_AI.pdf",
+        "page": "43"
+    },
+    {
+        "question": "Tiêu chí chính nào được sử dụng để đánh giá và lựa chọn cấu hình mô hình tối ưu?",
+        "ground_truth": "Chỉ số MAE (Mean Absolute Error).",
+        "source": "CNKH_AI.pdf",
+        "page": "44"
+    },
+    {
+        "question": "Trong phân tích SHAP toàn cục, các biểu đồ nào được sử dụng để xác định các đặc trưng có đóng góp lớn vào kết quả dự báo?",
+        "ground_truth": "SHAP bar plot và SHAP summary plot.",
+        "source": "CNKH_AI.pdf",
+        "page": "45"
+    }
+]

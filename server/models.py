@@ -126,3 +126,144 @@ class IndexInfoResponse(BaseModel):
     embedding_model: str
     faiss_index_type: str
     index_size_mb:  float
+
+
+# ── Pipeline ──────────────────────────────────────────────────────────────────
+
+class PipelineConfig(BaseModel):
+    """Full configuration for a pluggable RAG pipeline run."""
+
+    # Strategy selectors
+    chunker:            str = Field("sliding_window", description="sliding_window | semantic | proposition")
+    query_transformer:  str = Field("passthrough",    description="passthrough | multi_query | hyde | step_back")
+    retriever:          str = Field("dense",          description="dense | sparse | hybrid")
+    reranker:           str = Field("none",           description="none | bge")
+    context_processor:  str = Field("passthrough",    description="passthrough | window_expand | compress | rse | contextual_headers")
+
+    # Retrieval params
+    top_k:          int | None          = Field(None, description="Override default top_k")
+    filters:        dict[str, Any]      = Field(default_factory=dict)
+    hybrid_alpha:   float | None        = None
+
+    # Technique-specific params
+    multi_query_n:  int                 = Field(3,    description="Number of query variants for multi_query")
+    window_size:    int                 = Field(2,    description="Expand window ±k for window_expand")
+
+    # Generation
+    system_prompt:  str | None          = None
+
+    # Metadata
+    experiment_name: str | None         = None
+
+
+# ── Preset pipeline configs ───────────────────────────────────────────────────
+
+PIPELINE_PRESETS: dict[str, dict[str, Any]] = {
+    "baseline": {
+        "experiment_name":  "baseline",
+        "chunker":          "sliding_window",
+        "query_transformer":"passthrough",
+        "retriever":        "dense",
+        "reranker":         "none",
+        "context_processor":"passthrough",
+    },
+    "hybrid_rerank": {
+        "experiment_name":  "hybrid_rerank",
+        "chunker":          "sliding_window",
+        "query_transformer":"passthrough",
+        "retriever":        "hybrid",
+        "reranker":         "bge",
+        "context_processor":"passthrough",
+    },
+    "hyde": {
+        "experiment_name":  "hyde",
+        "query_transformer":"hyde",
+        "retriever":        "dense",
+        "reranker":         "none",
+        "context_processor":"passthrough",
+    },
+    "multi_query": {
+        "experiment_name":  "multi_query",
+        "query_transformer":"multi_query",
+        "retriever":        "hybrid",
+        "reranker":         "bge",
+        "context_processor":"passthrough",
+        "multi_query_n":    3,
+    },
+    "step_back": {
+        "experiment_name":  "step_back",
+        "query_transformer":"step_back",
+        "retriever":        "hybrid",
+        "reranker":         "none",
+        "context_processor":"passthrough",
+    },
+    "semantic_chunks": {
+        "experiment_name":  "semantic_chunks",
+        "chunker":          "semantic",
+        "query_transformer":"passthrough",
+        "retriever":        "dense",
+        "reranker":         "bge",
+        "context_processor":"passthrough",
+    },
+    "full_stack": {
+        "experiment_name":  "full_stack",
+        "query_transformer":"hyde",
+        "retriever":        "hybrid",
+        "reranker":         "bge",
+        "context_processor":"window_expand",
+        "window_size":      2,
+    },
+}
+
+
+class PipelineQueryRequest(BaseModel):
+    """Run a single query through a configurable pipeline."""
+    query:  str
+    config: PipelineConfig = Field(default_factory=PipelineConfig)
+
+
+class PipelineQueryResponse(BaseModel):
+    query:            str
+    answer:           str
+    chunks:           list[dict[str, Any]]
+    query_variants:   list[str]
+    retrieval_time:   float
+    generation_time:  float
+    total_time:       float
+    model:            str | None = None
+    pipeline_config:  dict[str, Any]
+
+
+class CompareRequest(BaseModel):
+    """Run same query through multiple pipeline configs side by side."""
+    query:   str
+    configs: list[PipelineConfig] = Field(
+        ..., min_length=1, max_length=4,
+        description="Up to 4 pipeline configs to compare",
+    )
+
+
+class CompareResponse(BaseModel):
+    query:   str
+    results: list[dict[str, Any]]   # one entry per config
+
+
+# ── Benchmark ─────────────────────────────────────────────────────────────────
+
+class BenchmarkRunRequest(BaseModel):
+    """Trigger a full evaluation benchmark run."""
+    experiment_name:  str
+    config:           PipelineConfig = Field(default_factory=PipelineConfig)
+    dataset_path:     str | None     = Field(None, description="Path relative to project root; default: data/evaluation/eval_dataset.json")
+    run_judge:        bool           = Field(True,  description="Whether to run LLM-as-judge generation metrics")
+    top_k:            int | None     = None
+
+
+class BenchmarkStatusResponse(BaseModel):
+    experiment_name:  str
+    status:           str            # running | done | error | idle
+    progress:         int            = 0
+    total:            int            = 0
+    current_metrics:  dict[str, Any] = Field(default_factory=dict)
+    result_path:      str | None     = None
+    error:            str | None     = None

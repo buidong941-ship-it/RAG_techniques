@@ -81,9 +81,12 @@ class Evaluator:
             raise FileNotFoundError(f"Eval dataset not found: {path}")
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
-        if not isinstance(data, list) or len(data) == 0:
-            raise ValueError("Eval dataset must be a non-empty JSON array")
-        logger.info("Loaded %d eval samples from %s", len(data), path)
+        if not isinstance(data, list):
+            raise ValueError("Eval dataset must be a JSON array")
+        if len(data) == 0:
+            logger.warning("Eval dataset is empty — add QA pairs to %s", path)
+        else:
+            logger.info("Loaded %d eval samples from %s", len(data), path)
         return data
 
     def run(

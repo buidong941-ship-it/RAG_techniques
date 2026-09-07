@@ -1,18 +1,24 @@
 import { useState, useEffect, useCallback } from 'react'
-import ChatPage      from './pages/ChatPage.jsx'
-import DocumentsPage from './pages/DocumentsPage.jsx'
-import DashboardPage from './pages/DashboardPage.jsx'
+import ChatPage        from './pages/ChatPage.jsx'
+import DocumentsPage  from './pages/DocumentsPage.jsx'
+import DashboardPage  from './pages/DashboardPage.jsx'
+import PipelineLabPage from './pages/PipelineLabPage.jsx'
+import BenchmarkPage  from './pages/BenchmarkPage.jsx'
 import { health, getServerUrl, setServerUrl } from './api.js'
 
 const NAV = [
-  { id: 'chat',      icon: '💬', label: 'Chat' },
-  { id: 'documents', icon: '📁', label: 'Documents' },
-  { id: 'dashboard', icon: '📊', label: 'Dashboard' },
+  { id: 'chat',        icon: '💬', label: 'Chat' },
+  { id: 'documents',   icon: '📁', label: 'Documents' },
+  { id: 'lab',         icon: '🔬', label: 'Pipeline Lab' },
+  { id: 'benchmark',   icon: '🏃', label: 'Benchmark' },
+  { id: 'dashboard',   icon: '📊', label: 'Dashboard' },
 ]
 
 const PAGE_TITLES = {
-  chat:      { title: 'Chat', sub: 'Retrieval-Augmented Generation' },
-  documents: { title: 'Documents', sub: 'Upload & manage knowledge base' },
+  chat:      { title: 'Chat',             sub: 'Retrieval-Augmented Generation' },
+  documents: { title: 'Documents',        sub: 'Upload & manage knowledge base' },
+  lab:       { title: 'Pipeline Lab',     sub: 'Compare RAG techniques side by side' },
+  benchmark: { title: 'Benchmark',        sub: 'Run evaluation & stream live metrics' },
   dashboard: { title: 'Experiment Dashboard', sub: 'Compare evaluation results' },
 }
 
@@ -118,6 +124,8 @@ export default function App() {
         {/* Page content */}
         {page === 'chat'      && <ChatPage />}
         {page === 'documents' && <DocumentsPage />}
+        {page === 'lab'       && <PipelineLabPage />}
+        {page === 'benchmark' && <BenchmarkPage />}
         {page === 'dashboard' && <DashboardPage />}
       </div>
     </div>

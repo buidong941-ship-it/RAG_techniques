@@ -59,3 +59,31 @@ export const clearIndex = () => request('DELETE', '/index')
 
 // ── Config update ──────────────────────────────────────────────
 export const updateConfig = (cfg) => request('POST', '/config', cfg)
+
+// ── Pipeline ───────────────────────────────────────────────────
+export const getPresets = () => request('GET', '/pipeline/presets')
+
+export const pipelineQuery = (query, config) =>
+  request('POST', '/pipeline/query', { query, config })
+
+export const pipelineCompare = (query, configs) =>
+  request('POST', '/pipeline/compare', { query, configs })
+
+// ── Benchmark ──────────────────────────────────────────────────
+export const benchmarkStatus = () => request('GET', '/benchmark/status')
+export const benchmarkList   = () => request('GET', '/benchmark/list')
+export const benchmarkResults = (name) => request('GET', `/benchmark/results/${name}`)
+
+/**
+ * Start a benchmark run and return an EventSource for SSE streaming.
+ * The caller should attach .onmessage / .onerror handlers.
+ */
+export function runBenchmark(payload) {
+  // SSE via fetch so we can POST with body
+  const url = `${getServerUrl()}/benchmark/run`
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}

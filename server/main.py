@@ -48,6 +48,12 @@ from server.models import (
     ConfigResponse,
     IndexInfoResponse,
     Chunk,
+    PipelineConfig,
+    PipelineQueryRequest,
+    CompareRequest,
+    BenchmarkRunRequest,
+    BenchmarkStatusResponse,
+    PIPELINE_PRESETS,
 )
 
 # ── Logging ────────────────────────────────────────────────────────────────────
@@ -304,7 +310,239 @@ async def judge_endpoint(request: JudgeRequest):
     return {"response": response}
 
 
-# ── Entry point ───────────────────────────────────────────────────────────────
+# ── Pipeline endpoints ───────────────────────────────────────────────────────────────
+
+@app.get("/pipeline/presets", tags=["pipeline"])
+async def list_presets():
+    """Return all named pipeline presets."""
+    return {"presets": PIPELINE_PRESETS}
+
+
+@app.post("/pipeline/query", tags=["pipeline"])
+async def pipeline_query(request: PipelineQueryRequest):
+    """
+    Run a query through a fully configurable RAG pipeline.
+    Specify query_transformer, retriever, reranker, context_processor, etc.
+    """
+    from server.pipeline import run_pipeline
+    try:
+        result = run_pipeline(query=request.query, config=request.config, generate=True)
+        return result
+    except Exception as e:
+        logger.exception("Pipeline query failed")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/pipeline/compare", tags=["pipeline"])
+async def pipeline_compare(request: CompareRequest):
+    """
+    Run the same query through multiple pipeline configs simultaneously.
+    Returns results list in same order as configs.
+    """
+    import asyncio
+    from server.pipeline import run_pipeline
+
+    async def _run_one(config: PipelineConfig) -> dict:
+        loop = asyncio.get_event_loop()
+        try:
+            return await loop.run_in_executor(
+                None, lambda: run_pipeline(request.query, config, generate=True)
+            )
+        except Exception as e:
+            return {"error": str(e), "pipeline_config": config.model_dump()}
+
+    results = await asyncio.gather(*[_run_one(cfg) for cfg in request.configs])
+    return {"query": request.query, "results": list(results)}
+
+
+# ── Benchmark endpoints (SSE streaming) ───────────────────────────────────────────
+
+import asyncio
+import json as _json
+from fastapi.responses import StreamingResponse
+
+# In-memory benchmark state
+_benchmark_state: dict[str, Any] = {
+    "status": "idle",
+    "experiment_name": "",
+    "progress": 0,
+    "total": 0,
+    "current_metrics": {},
+    "result_path": None,
+    "error": None,
+}
+
+
+@app.get("/benchmark/status", response_model=BenchmarkStatusResponse, tags=["benchmark"])
+async def benchmark_status():
+    """Get current benchmark run status."""
+    return BenchmarkStatusResponse(**_benchmark_state)
+
+
+@app.get("/benchmark/list", tags=["benchmark"])
+async def benchmark_list():
+    """List all experiment result files."""
+    results_dir = Path("experiments/results")
+    if not results_dir.exists():
+        return {"experiments": []}
+    experiments = []
+    for exp_dir in sorted(results_dir.iterdir()):
+        if exp_dir.is_dir():
+            metrics_file = exp_dir / "metrics.json"
+            experiments.append({
+                "name": exp_dir.name,
+                "has_metrics": metrics_file.exists(),
+                "metrics_path": str(metrics_file) if metrics_file.exists() else None,
+            })
+    return {"experiments": experiments}
+
+
+@app.get("/benchmark/results/{experiment_name}", tags=["benchmark"])
+async def benchmark_results(experiment_name: str):
+    """Get metrics.json for a specific experiment."""
+    metrics_file = Path("experiments/results") / experiment_name / "metrics.json"
+    if not metrics_file.exists():
+        raise HTTPException(status_code=404, detail=f"No results for '{experiment_name}'")
+    import json as _j
+    with open(metrics_file, encoding="utf-8") as f:
+        return _j.load(f)
+
+
+@app.post("/benchmark/run", tags=["benchmark"])
+async def benchmark_run(request: BenchmarkRunRequest):
+    """
+    Start a benchmark run and stream progress via Server-Sent Events.
+
+    Returns SSE stream:
+      data: {"type": "progress", "sample": N, "total": T, "metrics": {...}}
+      data: {"type": "done", "metrics": {...}, "result_path": "..."}
+      data: {"type": "error", "message": "..."}
+    """
+    if _benchmark_state["status"] == "running":
+        raise HTTPException(status_code=409, detail="A benchmark is already running")
+
+    async def _stream():
+        from server.pipeline import run_pipeline
+        import json as _j
+
+        _benchmark_state.update({
+            "status": "running",
+            "experiment_name": request.experiment_name,
+            "progress": 0, "total": 0,
+            "current_metrics": {}, "result_path": None, "error": None,
+        })
+
+        try:
+            # Load dataset
+            dataset_path = Path(request.dataset_path or "data/evaluation/eval_dataset.json")
+            if not dataset_path.exists():
+                raise FileNotFoundError(f"Dataset not found: {dataset_path}")
+            with open(dataset_path, encoding="utf-8") as f:
+                dataset = _j.load(f)
+
+            if not dataset:
+                raise ValueError("Eval dataset is empty")
+
+            _benchmark_state["total"] = len(dataset)
+            top_k = request.top_k or request.config.top_k or settings.top_k
+            config = request.config
+            if top_k:
+                config = config.model_copy(update={"top_k": top_k})
+
+            results_dir = Path("experiments/results") / request.experiment_name
+            results_dir.mkdir(parents=True, exist_ok=True)
+
+            per_sample: list[dict] = []
+            running_metrics: dict[str, list[float]] = {}
+
+            for i, sample in enumerate(dataset):
+                question = sample.get("question", "")
+                ground_truth = sample.get("ground_truth", "")
+
+                # Run pipeline
+                loop = asyncio.get_event_loop()
+                result = await loop.run_in_executor(
+                    None, lambda q=question: run_pipeline(q, config, generate=True)
+                )
+
+                sample_record: dict[str, Any] = {
+                    "sample_idx": i,
+                    "question": question,
+                    "ground_truth": ground_truth,
+                    "answer": result.get("answer", ""),
+                    "retrieved_ids": [c["chunk_id"] for c in result.get("chunks", [])],
+                    "retrieval_time": result.get("retrieval_time", 0),
+                    "generation_time": result.get("generation_time", 0),
+                }
+
+                # LLM judge metrics
+                if request.run_judge and sample_record["answer"]:
+                    from server.evaluation_helpers import judge_sample
+                    loop2 = asyncio.get_event_loop()
+                    gen_metrics = await loop2.run_in_executor(
+                        None,
+                        lambda: judge_sample(
+                            question=question,
+                            answer=sample_record["answer"],
+                            ground_truth=ground_truth,
+                            context="\n".join(c["text"] for c in result.get("chunks", [])),
+                        )
+                    )
+                    sample_record.update(gen_metrics)
+                    for k, v in gen_metrics.items():
+                        if isinstance(v, (int, float)):
+                            running_metrics.setdefault(k, []).append(v)
+
+                per_sample.append(sample_record)
+                _benchmark_state["progress"] = i + 1
+
+                # Compute running averages
+                avg_metrics = {k: sum(vs)/len(vs) for k, vs in running_metrics.items()}
+                _benchmark_state["current_metrics"] = avg_metrics
+
+                progress_event = _j.dumps({
+                    "type": "progress",
+                    "sample": i + 1,
+                    "total": len(dataset),
+                    "question": question[:80],
+                    "metrics": avg_metrics,
+                })
+                yield f"data: {progress_event}\n\n"
+
+            # Save results
+            agg = {k: sum(vs)/len(vs) for k, vs in running_metrics.items()}
+            output = {
+                "experiment": request.experiment_name,
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "config": config.model_dump(),
+                "num_samples": len(dataset),
+                "generation_metrics": agg,
+                "per_sample": per_sample,
+            }
+            metrics_path = results_dir / "metrics.json"
+            with open(metrics_path, "w", encoding="utf-8") as f:
+                _j.dump(output, f, ensure_ascii=False, indent=2)
+
+            result_path = str(metrics_path)
+            _benchmark_state.update({"status": "done", "result_path": result_path})
+
+            done_event = _j.dumps({"type": "done", "metrics": agg, "result_path": result_path})
+            yield f"data: {done_event}\n\n"
+
+        except Exception as e:
+            logger.exception("Benchmark failed")
+            _benchmark_state.update({"status": "error", "error": str(e)})
+            err_event = _j.dumps({"type": "error", "message": str(e)})
+            yield f"data: {err_event}\n\n"
+
+    return StreamingResponse(
+        _stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+# ── Entry point ─────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import uvicorn
