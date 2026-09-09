@@ -18,6 +18,8 @@ const STRATEGY_OPTIONS = {
   context_processor: ['passthrough', 'window_expand', 'compress', 'rse', 'contextual_headers'],
 }
 
+const JUDGE_METRICS = ['answer_correctness', 'faithfulness', 'context_relevance', 'answer_relevance']
+
 // ── Progress bar ────────────────────────────────────────────────────────────
 function ProgressBar({ value, max, color = 'var(--accent)' }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
@@ -52,6 +54,179 @@ function LiveMetrics({ metrics }) {
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+// ── Score chip ──────────────────────────────────────────────────────────────────
+function ScoreChip({ value }) {
+  if (value == null) return <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>—</span>
+  const color = value >= 0.7 ? 'var(--green)' : value >= 0.4 ? 'var(--amber)' : 'var(--red)'
+  return (
+    <span style={{
+      fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color,
+      background: value >= 0.7 ? 'var(--green-dim)' : value >= 0.4 ? 'var(--amber-dim)' : 'var(--red-dim)',
+      padding: '2px 7px', borderRadius: 99, whiteSpace: 'nowrap',
+    }}>
+      {value.toFixed(2)}
+    </span>
+  )
+}
+
+// ── Per-sample row ────────────────────────────────────────────────────────────────
+function SampleRow({ sample, index, hasJudge }) {
+  const [expanded, setExpanded] = useState(false)
+  const correctness = sample.answer_correctness
+  const isGood = correctness == null ? null : correctness >= 0.7
+
+  return (
+    <>
+      <tr
+        onClick={() => setExpanded(v => !v)}
+        style={{ cursor: 'pointer', transition: 'background 120ms' }}
+        className="sample-row"
+      >
+        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)', width: 36, textAlign: 'center' }}>
+          {index + 1}
+        </td>
+        <td style={{ width: 28, textAlign: 'center' }}>
+          {correctness == null
+            ? <span title="No judge">·</span>
+            : isGood
+              ? <span title="Correct" style={{ color: 'var(--green)' }}>✓</span>
+              : <span title="Wrong" style={{ color: 'var(--red)' }}>✗</span>
+          }
+        </td>
+        <td style={{ fontSize: 12.5, color: 'var(--text-primary)', maxWidth: 320 }}>
+          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {sample.question}
+          </div>
+        </td>
+        {hasJudge && JUDGE_METRICS.map(m => (
+          <td key={m} style={{ textAlign: 'center', width: 80 }}>
+            <ScoreChip value={sample[m]} />
+          </td>
+        ))}
+        <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', textAlign: 'right', whiteSpace: 'nowrap' }}>
+          {sample.retrieval_time != null ? `${(sample.retrieval_time * 1000).toFixed(0)}ms` : '—'}
+        </td>
+        <td style={{ width: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 11 }}>
+          {expanded ? '▲' : '▼'}
+        </td>
+      </tr>
+
+      {expanded && (
+        <tr>
+          <td colSpan={hasJudge ? 6 + JUDGE_METRICS.length : 6}
+            style={{ padding: 0, background: 'var(--bg-elevated)' }}>
+            <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {sample.ground_truth && (
+                <div>
+                  <div style={{ fontSize: 11, color: 'var(--green)', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>✓ Ground Truth</div>
+                  <div style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text-primary)' }}>{sample.ground_truth}</div>
+                </div>
+              )}
+              <div>
+                <div style={{ fontSize: 11, color: correctness == null ? 'var(--text-muted)' : isGood ? 'var(--accent-light)' : 'var(--amber)', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>🤖 Model Answer</div>
+                <div style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+                  {sample.answer || <em style={{ color: 'var(--text-muted)' }}>No answer generated</em>}
+                </div>
+              </div>
+              {hasJudge && JUDGE_METRICS.some(m => sample[m] != null) && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+                  {JUDGE_METRICS.filter(m => sample[m] != null).map(m => (
+                    <div key={m}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
+                        <span style={{ color: 'var(--text-muted)' }}>{m.replace(/_/g, ' ')}</span>
+                        <ScoreChip value={sample[m]} />
+                      </div>
+                      <div className="score-bar-bg">
+                        <div className="score-bar-fill" style={{
+                          width: `${(sample[m] * 100).toFixed(0)}%`,
+                          background: sample[m] >= 0.7 ? 'var(--green)' : sample[m] >= 0.4 ? 'var(--amber)' : 'var(--red)',
+                        }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 16, fontSize: 11.5, color: 'var(--text-muted)' }}>
+                {sample.retrieval_time != null && <span>retrieval: {(sample.retrieval_time * 1000).toFixed(0)}ms</span>}
+                {sample.generation_time != null && <span>generation: {(sample.generation_time * 1000).toFixed(0)}ms</span>}
+                {sample.retrieved_ids?.length > 0 && <span>{sample.retrieved_ids.length} chunks retrieved</span>}
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  )
+}
+
+// ── Per-sample table ───────────────────────────────────────────────────────────────
+function SampleTable({ samples }) {
+  const [filter, setFilter] = useState('all')
+  if (!samples || samples.length === 0) return null
+
+  const hasJudge = samples.some(s => s.answer_correctness != null)
+
+  const filtered = samples.filter(s => {
+    if (filter === 'correct') return (s.answer_correctness ?? 0) >= 0.7
+    if (filter === 'wrong')   return s.answer_correctness != null && s.answer_correctness < 0.7
+    if (filter === 'nojudge') return s.answer_correctness == null
+    return true
+  })
+
+  const correctCount = samples.filter(s => (s.answer_correctness ?? 0) >= 0.7).length
+  const wrongCount   = samples.filter(s => s.answer_correctness != null && s.answer_correctness < 0.7).length
+
+  return (
+    <div className="card" style={{ marginTop: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+        <div className="card-title" style={{ margin: 0 }}>Per-Sample Results</div>
+        <span className="badge badge-green">{correctCount} correct</span>
+        <span className="badge badge-red">{wrongCount} wrong</span>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+          {['all', 'correct', 'wrong', 'nojudge'].map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`btn btn-ghost`}
+              style={{
+                padding: '3px 10px', fontSize: 11,
+                background: filter === f ? 'var(--accent-dim)' : '',
+                color: filter === f ? 'var(--accent-light)' : '',
+              }}>
+              {f}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border)' }}>
+              <th style={{ width: 36, padding: '6px 8px', color: 'var(--text-muted)', fontWeight: 600, fontSize: 11 }}>#</th>
+              <th style={{ width: 28 }}></th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--text-muted)', fontWeight: 600, fontSize: 11 }}>QUESTION</th>
+              {hasJudge && JUDGE_METRICS.map(m => (
+                <th key={m} style={{ width: 80, textAlign: 'center', padding: '6px 4px', color: 'var(--text-muted)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.3px' }}>
+                  {m.replace('answer_', '').replace(/_/g, ' ')}
+                </th>
+              ))}
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--text-muted)', fontWeight: 600, fontSize: 11 }}>RTR</th>
+              <th style={{ width: 24 }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((s, i) => (
+              <SampleRow key={s.sample_idx ?? i} sample={s} index={s.sample_idx ?? i} hasJudge={hasJudge} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-muted)' }}>
+        Hiển thị {filtered.length}/{samples.length} samples — click vào hàng để xem chi tiết
+      </div>
     </div>
   )
 }
@@ -113,13 +288,14 @@ export default function BenchmarkPage() {
   const [config, setConfig]           = useState({ ...DEFAULT_CONFIG })
   const [expName, setExpName]         = useState('my_experiment')
   const [runJudge, setRunJudge]       = useState(true)
-  const [status, setStatus]           = useState('idle') // idle | running | done | error
+  const [status, setStatus]           = useState('idle')
   const [progress, setProgress]       = useState(0)
   const [total, setTotal]             = useState(0)
   const [currentMetrics, setCurrentMetrics] = useState({})
   const [finalMetrics, setFinalMetrics]     = useState(null)
+  const [perSample, setPerSample]           = useState([])   // ← NEW
   const [error, setError]             = useState(null)
-  const [log, setLog]                 = useState([])   // live log entries
+  const [log, setLog]                 = useState([])
   const [resultPath, setResultPath]   = useState(null)
   const logRef = useRef(null)
 
@@ -135,7 +311,7 @@ export default function BenchmarkPage() {
 
     setStatus('running')
     setProgress(0); setTotal(0)
-    setCurrentMetrics({}); setFinalMetrics(null)
+    setCurrentMetrics({}); setFinalMetrics(null); setPerSample([])
     setError(null); setLog([])
     setResultPath(null)
 
@@ -178,6 +354,14 @@ export default function BenchmarkPage() {
               setFinalMetrics(event.metrics)
               setResultPath(event.result_path)
               addLog(`✅ Done! Saved to: ${event.result_path}`)
+              // Load per-sample data from saved file
+              if (event.result_path) {
+                try {
+                  const expDir = expName
+                  const fullData = await benchmarkResults(expDir)
+                  setPerSample(fullData.per_sample || [])
+                } catch { /* non-critical */ }
+              }
             } else if (event.type === 'error') {
               setStatus('error')
               setError(event.message)
@@ -198,6 +382,7 @@ export default function BenchmarkPage() {
       const data = await benchmarkResults(name)
       setExpName(name)
       setFinalMetrics(data.generation_metrics || {})
+      setPerSample(data.per_sample || [])           // ← load per_sample
       setTotal(data.num_samples || 0)
       setProgress(data.num_samples || 0)
       setStatus('done')
@@ -351,6 +536,9 @@ export default function BenchmarkPage() {
               </div>
             </div>
           )}
+
+          {/* Per-sample table */}
+          {perSample.length > 0 && <SampleTable samples={perSample} />}
         </div>
       </div>
     </div>

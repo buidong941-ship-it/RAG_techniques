@@ -798,3 +798,7 @@ select option { background: var(--bg-elevated); }
   line-height: 1.6;
   color: var(--text-secondary);
 }
+
+/* ── Per-sample table ─────────────────────────────────────────── */
+.sample-row:hover td { background: var(--bg-hover); }
+.sample-row td { padding: 8px 8px; border-bottom: 1px solid var(--border); }
