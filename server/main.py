@@ -137,6 +137,7 @@ async def ingest_endpoint(request: IngestRequest):
             doc_id=request.filename,
             chunk_size=request.chunk_size,
             chunk_overlap=request.chunk_overlap,
+            chunker=request.chunker,
         )
     except Exception as e:
         logger.exception("Ingestion failed: %s", e)
@@ -154,8 +155,13 @@ async def ingest_upload(
     file: UploadFile = File(...),
     chunk_size: int | None = None,
     chunk_overlap: int | None = None,
+    chunker: str = "sliding_window",
 ):
-    """Ingest via multipart file upload (convenient for curl / UI)."""
+    """Ingest via multipart file upload (convenient for curl / UI).
+
+    chunker options: sliding_window (default) | semantic | proposition
+    NOTE: proposition is slow — one LLM call per pre-chunk.
+    """
     settings.ensure_dirs()
     file_bytes = await file.read()
     file_path = settings.documents_dir / file.filename
@@ -167,6 +173,7 @@ async def ingest_upload(
             doc_id=file.filename,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
+            chunker=chunker,
         )
     except Exception as e:
         logger.exception("Upload ingestion failed: %s", e)

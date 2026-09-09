@@ -37,7 +37,7 @@ export const query = (payload) => request('POST', '/query', payload)
 export const retrieve = (payload) => request('POST', '/retrieve', payload)
 
 // ── Ingest (base64) ────────────────────────────────────────────
-export async function ingestFile(file, chunkSize, chunkOverlap) {
+export async function ingestFile(file, chunkSize, chunkOverlap, chunker = 'sliding_window') {
   const arrayBuffer = await file.arrayBuffer()
   const bytes = new Uint8Array(arrayBuffer)
   let binary = ''
@@ -48,6 +48,7 @@ export async function ingestFile(file, chunkSize, chunkOverlap) {
     content_b64,
     chunk_size: chunkSize || undefined,
     chunk_overlap: chunkOverlap || undefined,
+    chunker,
   })
 }
 

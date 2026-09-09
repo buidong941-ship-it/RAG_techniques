@@ -222,9 +222,15 @@ def ingest_document(
     doc_id: str | None = None,
     chunk_size: int | None = None,
     chunk_overlap: int | None = None,
+    chunker: str = "sliding_window",
 ) -> dict[str, Any]:
     """
     Full pipeline: extract → chunk → embed → add to FAISS.
+
+    Args:
+        chunker: Chunking strategy — "sliding_window" | "semantic" | "proposition"
+                 semantic:    splits on embedding cosine-similarity breakpoints
+                 proposition: LLM extracts atomic facts (slow, one LLM call per pre-chunk)
 
     Returns stats dict.
     """
@@ -232,18 +238,60 @@ def ingest_document(
     chunk_overlap = chunk_overlap or settings.chunk_overlap
     doc_id        = doc_id        or file_path.name
 
-    logger.info("Ingesting document: %s (chunk_size=%d, overlap=%d)", doc_id, chunk_size, chunk_overlap)
+    logger.info(
+        "Ingesting document: %s (chunker=%s, chunk_size=%d, overlap=%d)",
+        doc_id, chunker, chunk_size, chunk_overlap,
+    )
 
     # 1. Extract text
     pages = extract_text(file_path)
 
-    # 2. Chunk
+    # 2. Chunk — dispatch to the selected strategy
+    from server.techniques.chunkers import chunk_text as _chunk_text_strategy
+
     all_raw_chunks: list[dict[str, Any]] = []
-    for page_info in pages:
-        raw_chunks = chunk_text(page_info["text"], chunk_size, chunk_overlap)
-        for rc in raw_chunks:
-            rc["page"] = page_info["page"]
-        all_raw_chunks.extend(raw_chunks)
+
+    if chunker == "sliding_window":
+        # Baseline: chunk per-page (preserves page metadata)
+        for page_info in pages:
+            raw = chunk_text(page_info["text"], chunk_size, chunk_overlap)
+            for rc in raw:
+                rc["page"] = page_info["page"]
+            all_raw_chunks.extend(raw)
+    else:
+        # Semantic / Proposition: operate on full document text for best results
+        full_text = "\n\n".join(p["text"] for p in pages)
+        chunk_strings = _chunk_text_strategy(
+            full_text,
+            strategy=chunker,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+        )
+        # Assign approximate page numbers by character position
+        page_boundaries: list[tuple[int, int]] = []
+        pos = 0
+        for p in pages:
+            page_boundaries.append((pos, p["page"]))
+            pos += len(p["text"]) + 2  # +2 for "\n\n" separator
+
+        def _approx_page(char_start: int) -> int:
+            page_num = 1
+            for boundary_pos, pnum in page_boundaries:
+                if char_start >= boundary_pos:
+                    page_num = pnum
+                else:
+                    break
+            return page_num
+
+        running_pos = 0
+        for chunk_str in chunk_strings:
+            all_raw_chunks.append({
+                "text": chunk_str,
+                "char_start": running_pos,
+                "char_end": running_pos + len(chunk_str),
+                "page": _approx_page(running_pos),
+            })
+            running_pos += len(chunk_str)
 
     if not all_raw_chunks:
         raise ValueError(f"No text extracted from {file_path}")

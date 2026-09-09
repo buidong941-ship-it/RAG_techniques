@@ -34,8 +34,9 @@ export default function DocumentsPage() {
   const [error, setError]     = useState(null)
   const [success, setSuccess] = useState(null)
   const [dragging, setDragging] = useState(false)
-  const [chunkSize, setChunkSize]     = useState(500)
+  const [chunkSize, setChunkSize]       = useState(500)
   const [chunkOverlap, setChunkOverlap] = useState(50)
+  const [chunker, setChunker]           = useState('sliding_window')
   const fileInputRef = useRef(null)
 
   const fetchInfo = useCallback(async () => {
@@ -59,7 +60,7 @@ export default function DocumentsPage() {
     let ok = 0, fail = 0
     for (const file of files) {
       try {
-        const res = await ingestFile(file, chunkSize, chunkOverlap)
+        const res = await ingestFile(file, chunkSize, chunkOverlap, chunker)
         ok++
       } catch (e) {
         fail++
@@ -119,7 +120,20 @@ export default function DocumentsPage() {
           <div className="card-title">Upload Documents</div>
 
           {/* Chunking options */}
-          <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+          <div style={{ display: 'flex', gap: 16, marginBottom: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div className="option-group" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+              <label style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Chunker</label>
+              <select
+                id="doc-chunker"
+                value={chunker}
+                onChange={e => setChunker(e.target.value)}
+                style={{ fontSize: 12.5, minWidth: 160 }}
+              >
+                <option value="sliding_window">Sliding Window (baseline)</option>
+                <option value="semantic">Semantic Chunking</option>
+                <option value="proposition">Proposition Chunking ⚠️ chậm</option>
+              </select>
+            </div>
             <div className="option-group" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
               <label style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Chunk size</label>
               <input
@@ -128,6 +142,7 @@ export default function DocumentsPage() {
                 value={chunkSize}
                 onChange={e => setChunkSize(Number(e.target.value))}
                 style={{ width: 100 }}
+                disabled={chunker !== 'sliding_window'}
               />
             </div>
             <div className="option-group" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -138,6 +153,7 @@ export default function DocumentsPage() {
                 value={chunkOverlap}
                 onChange={e => setChunkOverlap(Number(e.target.value))}
                 style={{ width: 100 }}
+                disabled={chunker !== 'sliding_window'}
               />
             </div>
             <div style={{ marginLeft: 'auto', alignSelf: 'flex-end' }}>
@@ -146,6 +162,18 @@ export default function DocumentsPage() {
               </button>
             </div>
           </div>
+
+          {/* Chunker info banner */}
+          {chunker === 'semantic' && (
+            <div className="alert alert-info" style={{ marginBottom: 12, fontSize: 12 }}>
+              🔵 <b>Semantic Chunking:</b> Split tại điểm cosine similarity thấp giữa các câu. Nhanh hơn proposition, thường cho kết quả tốt hơn baseline.
+            </div>
+          )}
+          {chunker === 'proposition' && (
+            <div className="alert alert-error" style={{ marginBottom: 12, fontSize: 12 }}>
+              ⚠️ <b>Proposition Chunking:</b> LLM gọi 1 lần cho mỗi pre-chunk. Với PDF 50 trang có thể mất <b>10–30 phút</b> để ingest xong. Hãy kiên nhẫn.
+            </div>
+          )}
 
           {/* Drop zone */}
           <div

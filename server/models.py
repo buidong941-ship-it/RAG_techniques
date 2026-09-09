@@ -50,6 +50,7 @@ class IngestRequest(BaseModel):
     content_b64:    str | None  = Field(None, description="Base64-encoded file bytes; omit if file already on server")
     chunk_size:     int | None  = Field(None, description="Override default chunk_size")
     chunk_overlap:  int | None  = Field(None, description="Override default chunk_overlap")
+    chunker:        str         = Field("sliding_window", description="sliding_window | semantic | proposition")
 
 
 class IngestResponse(BaseModel):
